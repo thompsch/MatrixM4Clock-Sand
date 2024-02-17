@@ -23,9 +23,6 @@ WiFiUDP Udp;
 bool time_setup()
 {
   // Open serial communications and wait for port to open:
-  /*Serial.begin(9600);
-  while (!Serial)
-    ;*/
   setSyncProvider(getNtpTime);
   setSyncInterval(300);
 
@@ -37,8 +34,6 @@ time_t getNtpTime()
 
   if (WiFi.status() == WL_NO_MODULE)
   {
-    // Serial.println("Communication with WiFi module failed!");
-    // return "error";
     //  don't continue
     while (true)
       ;
@@ -46,8 +41,6 @@ time_t getNtpTime()
 
   while (status != WL_CONNECTED)
   {
-    // Serial.print("Attempting to connect to SSID: ");
-    // Serial.println(ssid);
     status = WiFi.begin(ssid, pass);
 
     // wait 10 seconds for connection:
@@ -86,15 +79,7 @@ time_t prevMinute = 0;
 
 String time_loop()
 {
-  // Serial.println("let's do the time loop again");
-  // Serial.println(timeStatus());
-  // Serial.println(timeNotSet);
-
-  // if (timeStatus() != timeNotSet) {
-  //  if (minute() != prevMinute) { //update the display only if time has changed in the last X seconds
   return digitalClockDisplay();
-  //  } else return prevDisplay;
-  // }
 }
 
 String digitalClockDisplay()
@@ -108,25 +93,13 @@ String digitalClockDisplay()
     shortHour = shortHour - 12;
   }
 
-  // Serial.println(shortHour);
-  //  digital clock display of the time
   String minutes = printDigits(minute());
   String hours = printDigits(shortHour);
-  /*Serial.print(" ");
-  Serial.print(day());
-  Serial.print(".");
-  Serial.print(month());
-  Serial.print(".");
-  Serial.print(year());
-  Serial.println();
-  Serial.println(hour() + ":" + minute());
-  return hour() + ":" + minute();*/
   return hours + ":" + minutes;
 }
 
 String printDigits(int digits)
 {
-  // Serial.println("digits" + digits);
   //  utility for digital clock display: prints leading 0
   if (digits < 10)
     return "0" + String(digits);
@@ -155,18 +128,9 @@ void sendNTPpacket(IPAddress &address)
 
 void printWifiStatus()
 {
-  // print the SSID of the network you're attached to:
-  // Serial.print("SSID: ");
-  // Serial.println(WiFi.SSID());
-
   // print your board's IP address:
   IPAddress ip = WiFi.localIP();
-  // Serial.print("IP Address: ");
-  // Serial.println(ip);
 
   // print the received signal strength:
   long rssi = WiFi.RSSI();
-  // Serial.print("signal strength (RSSI):");
-  // Serial.print(rssi);
-  // Serial.println(" dBm");
 }

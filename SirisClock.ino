@@ -44,7 +44,6 @@ void loop()
         if (dimmerIndex == 2) dimmerIndex = 0;
         else dimmerIndex++; //should loop through 3-value array]
         dimmer = dimmerArray[dimmerIndex];
-        //Serial.println(dimmerIndex);
       }
     }
   }
