@@ -2,158 +2,171 @@
 #include <SPI.h>
 #include <WiFiNINA.h>
 #include <WiFiUdp.h>
+#include <TimeLib.h>
+
+#include "arduino_secrets.h"
 
 int status = WL_IDLE_STATUS;
-#include "arduino_secrets.h" 
-char ssid[] = SECRET_SSID;        // your network SSID (name)
-char pass[] = SECRET_PASS;    // your network password (use for WPA, or use as key for WEP)
-int keyIndex = 0;            // your network key index number (needed only for WEP)
+char ssid[] = SECRET_SSID; // your network SSID (name)
+char pass[] = SECRET_PASS; // your network password (use for WPA, or use as key for WEP)
+int keyIndex = 0;          // your network key index number (needed only for WEP)
 
-unsigned int localPort = 2390;      // local port to listen for UDP packets
-
+unsigned int localPort = 2390;            // local port to listen for UDP packets
 IPAddress timeServer(162, 159, 200, 123); // pool.ntp.org NTP server
-
-const int NTP_PACKET_SIZE = 48; // NTP timestamp is in the first 48 bytes of the message
-
-byte packetBuffer[NTP_PACKET_SIZE]; //buffer to hold incoming and outgoing packets
+const int NTP_PACKET_SIZE = 48;           // NTP timestamp is in the first 48 bytes of the message
+byte packetBuffer[NTP_PACKET_SIZE];       // buffer to hold incoming and outgoing packets
+const int timeZone = -8;                  // Pacific Standard Time (USA)
 
 // A UDP instance to let us send and receive packets over UDP
 WiFiUDP Udp;
 
-String get_ntp_time() {
+bool time_setup()
+{
   // Open serial communications and wait for port to open:
-  Serial.begin(9600);
-  while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
+  /*Serial.begin(9600);
+  while (!Serial)
+    ;*/
+  setSyncProvider(getNtpTime);
+  setSyncInterval(300);
+
+  return true;
+}
+
+time_t getNtpTime()
+{
+
+  if (WiFi.status() == WL_NO_MODULE)
+  {
+    // Serial.println("Communication with WiFi module failed!");
+    // return "error";
+    //  don't continue
+    while (true)
+      ;
   }
 
-  // check for the WiFi module:
-  if (WiFi.status() == WL_NO_MODULE) {
-    Serial.println("Communication with WiFi module failed!");
-    //return "error";
-    // don't continue
-    while (true);
-  }
-
-  /*String fv = WiFi.firmwareVersion();
-  if (fv < WIFI_FIRMWARE_LATEST_VERSION) {
-    Serial.println("Please upgrade the firmware");
-    return "error";
-  }*/
-
-  // attempt to connect to WiFi network:
-  while (status != WL_CONNECTED) {
-    Serial.print("Attempting to connect to SSID: ");
-    Serial.println(ssid);
-    // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
+  while (status != WL_CONNECTED)
+  {
+    // Serial.print("Attempting to connect to SSID: ");
+    // Serial.println(ssid);
     status = WiFi.begin(ssid, pass);
 
     // wait 10 seconds for connection:
-    delay(10000);
+    // delay(10000);
   }
 
-  Serial.println("Connected to WiFi");
+  // Serial.println("Connected to WiFi");
   printWifiStatus();
 
-  Serial.println("\nStarting connection to server...");
+  // Serial.println("\nStarting connection to server...");
   Udp.begin(localPort);
 
   sendNTPpacket(timeServer); // send an NTP packet to a time server
-  // wait to see if a reply is available
-  delay(1000);
-  if (Udp.parsePacket()) {
-    Serial.println("packet received");
-    // We've received a packet, read the data from it
-    Udp.read(packetBuffer, NTP_PACKET_SIZE); // read the packet into the buffer
-
-    //the timestamp starts at byte 40 of the received packet and is four bytes,
-    // or two words, long. First, extract the two words:
-
-    unsigned long highWord = word(packetBuffer[40], packetBuffer[41]);
-    unsigned long lowWord = word(packetBuffer[42], packetBuffer[43]);
-    // combine the four bytes (two words) into a long integer
-    // this is NTP time (seconds since Jan 1 1900):
-    unsigned long secsSince1900 = highWord << 16 | lowWord;
-    Serial.print("Seconds since Jan 1 1900 = ");
-    Serial.println(secsSince1900);
-
-    // now convert NTP time into everyday time:
-    Serial.print("Unix time = ");
-    // Unix time starts on Jan 1 1970. In seconds, that's 2208988800:
-    const unsigned long seventyYears = 2208988800UL;
-    // subtract seventy years:
-    unsigned long epoch = secsSince1900 - seventyYears;
-    // print Unix time:
-    Serial.println(epoch);
-
-    String result;
-    // print the hour, minute and second:
-    //Serial.print("The UTC time is ");       // UTC is the time at Greenwich Meridian (GMT)
-    unsigned long localTime = epoch - 28000;
-    //TODO: 12 hour clock!
-    result = String((localTime  % 86400L) / 3600) + ":"; // print the hour (86400 equals secs per day)
-    if (((localTime % 3600) / 60) < 10) {
-      // In the first 10 minutes of each hour, we'll want a leading '0'
-      result = result + "0";
+  uint32_t beginWait = millis();
+  while (millis() - beginWait < 1500)
+  {
+    int size = Udp.parsePacket();
+    if (size >= NTP_PACKET_SIZE)
+    {
+      // Serial.println("Receive NTP Response");
+      Udp.read(packetBuffer, NTP_PACKET_SIZE); // read packet into the buffer
+      unsigned long secsSince1900;
+      // convert four bytes starting at location 40 to a long integer
+      secsSince1900 = (unsigned long)packetBuffer[40] << 24;
+      secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
+      secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
+      secsSince1900 |= (unsigned long)packetBuffer[43];
+      return secsSince1900 - 2208988800UL + timeZone * 3600;
     }
-    result = result + String((localTime  % 3600) / 60);// + ":"; // print the minute (3600 equals secs per minute)
-    if ((localTime % 60) < 10) {
-      // In the first 10 seconds of each minute, we'll want a leading '0'
-      result = result + "0";
-    }
-    //result = result + String(localTime % 60); // print the second
-
-    return result;
   }
-  return "error";
+  return 0;
+}
+
+time_t prevDisplay = 0; // when the digital clock was displayed
+time_t prevMinute = 0;
+
+String time_loop()
+{
+  // Serial.println("let's do the time loop again");
+  // Serial.println(timeStatus());
+  // Serial.println(timeNotSet);
+
+  // if (timeStatus() != timeNotSet) {
+  //  if (minute() != prevMinute) { //update the display only if time has changed in the last X seconds
+  return digitalClockDisplay();
+  //  } else return prevDisplay;
+  // }
+}
+
+String digitalClockDisplay()
+{
+  prevDisplay = now();
+  prevMinute = minute();
+
+  int shortHour = hour();
+  if (hour() > 12)
+  {
+    shortHour = shortHour - 12;
+  }
+
+  // Serial.println(shortHour);
+  //  digital clock display of the time
+  String minutes = printDigits(minute());
+  String hours = printDigits(shortHour);
+  /*Serial.print(" ");
+  Serial.print(day());
+  Serial.print(".");
+  Serial.print(month());
+  Serial.print(".");
+  Serial.print(year());
+  Serial.println();
+  Serial.println(hour() + ":" + minute());
+  return hour() + ":" + minute();*/
+  return hours + ":" + minutes;
+}
+
+String printDigits(int digits)
+{
+  // Serial.println("digits" + digits);
+  //  utility for digital clock display: prints leading 0
+  if (digits < 10)
+    return "0" + String(digits);
+  else
+    return String(digits);
 }
 
 // send an NTP request to the time server at the given address
-unsigned long sendNTPpacket(IPAddress& address) {
-  //Serial.println("1");
-  // set all bytes in the buffer to 0
+void sendNTPpacket(IPAddress &address)
+{
   memset(packetBuffer, 0, NTP_PACKET_SIZE);
-  // Initialize values needed to form NTP request
-  // (see URL above for details on the packets)
-  //Serial.println("2");
-  packetBuffer[0] = 0b11100011;   // LI, Version, Mode
-  packetBuffer[1] = 0;     // Stratum, or type of clock
-  packetBuffer[2] = 6;     // Polling Interval
-  packetBuffer[3] = 0xEC;  // Peer Clock Precision
+  packetBuffer[0] = 0b11100011; // LI, Version, Mode
+  packetBuffer[1] = 0;          // Stratum, or type of clock
+  packetBuffer[2] = 6;          // Polling Interval
+  packetBuffer[3] = 0xEC;       // Peer Clock Precision
   // 8 bytes of zero for Root Delay & Root Dispersion
-  packetBuffer[12]  = 49;
-  packetBuffer[13]  = 0x4E;
-  packetBuffer[14]  = 49;
-  packetBuffer[15]  = 52;
+  packetBuffer[12] = 49;
+  packetBuffer[13] = 0x4E;
+  packetBuffer[14] = 49;
+  packetBuffer[15] = 52;
 
-  //Serial.println("3");
-
-  // all NTP fields have been given values, now
-  // you can send a packet requesting a timestamp:
-  Udp.beginPacket(address, 123); //NTP requests are to port 123
-  //Serial.println("4");
+  Udp.beginPacket(address, 123); // NTP requests are to port 123
   Udp.write(packetBuffer, NTP_PACKET_SIZE);
-  //Serial.println("5");
   Udp.endPacket();
-  //Serial.println("6");
-  return 6;
 }
 
-String timeAsString(
-
-void printWifiStatus() {
+void printWifiStatus()
+{
   // print the SSID of the network you're attached to:
-  Serial.print("SSID: ");
-  Serial.println(WiFi.SSID());
+  // Serial.print("SSID: ");
+  // Serial.println(WiFi.SSID());
 
   // print your board's IP address:
   IPAddress ip = WiFi.localIP();
-  Serial.print("IP Address: ");
-  Serial.println(ip);
+  // Serial.print("IP Address: ");
+  // Serial.println(ip);
 
   // print the received signal strength:
   long rssi = WiFi.RSSI();
-  Serial.print("signal strength (RSSI):");
-  Serial.print(rssi);
-  Serial.println(" dBm");
+  // Serial.print("signal strength (RSSI):");
+  // Serial.print(rssi);
+  // Serial.println(" dBm");
 }
