@@ -23,9 +23,9 @@ bool isStopped = false;
 
 Adafruit_LIS3DH accel = Adafruit_LIS3DH();
 
-#define N_COLORS 8
+#define N_COLORS 4
 #define BOX_HEIGHT 8
-#define N_GRAINS (BOX_HEIGHT * N_COLORS * 8)
+#define N_GRAINS (BOX_HEIGHT * N_COLORS * 16)
 uint16_t colors[N_COLORS];
 
 Adafruit_PixelDust sand(WIDTH, HEIGHT, N_GRAINS, 1, 128, false);
@@ -33,6 +33,19 @@ Adafruit_PixelDust sand(WIDTH, HEIGHT, N_GRAINS, 1, 128, false);
 uint32_t prevTime = 0; // Used for frames-per-second throttle
 
 void setColors() {
+
+//try this library sometime:
+//https://github.com/newdigate/rgb565_colors
+    //colors[0] = matrix.color565(60 * dimmer, 60 * dimmer, 60 * dimmer);   // Dark Gray
+    //colors[1] = matrix.color565(100 * dimmer, 59 * dimmer, 3 * dimmer); // Brown
+    colors[0] = matrix.color565(208 * dimmer, 1 * dimmer, 208 * dimmer);   // Yellow
+   // colors[3] = matrix.color565(235 * dimmer, 120 * dimmer, 0);          // Orange
+    colors[1] = matrix.color565(0 * dimmer, 255 * dimmer, 100 * dimmer);    // cyan
+    colors[2] = matrix.color565(0, 235 * dimmer, 1 * dimmer);           // Green
+    colors[3] = matrix.color565(0, 57 * dimmer, 235 * dimmer);           // Blue
+   // colors[7] = matrix.color565(97 * dimmer, 7 * dimmer, 115 * dimmer); // Purple
+
+  /*
     colors[0] = matrix.color565(60 * dimmer, 60 * dimmer, 60 * dimmer);   // Dark Gray
     colors[1] = matrix.color565(100 * dimmer, 59 * dimmer, 3 * dimmer); // Brown
     colors[2] = matrix.color565(208 * dimmer, 1 * dimmer, 1 * dimmer);   // Red
@@ -41,6 +54,7 @@ void setColors() {
     colors[5] = matrix.color565(0, 108 * dimmer, 18 * dimmer);           // Green
     colors[6] = matrix.color565(0, 57 * dimmer, 235 * dimmer);           // Blue
     colors[7] = matrix.color565(97 * dimmer, 7 * dimmer, 115 * dimmer); // Purple
+    */
 }
 
 
@@ -67,7 +81,7 @@ void pixel_dust_setup(void)
     }
     accel.setRange(LIS3DH_RANGE_4_G); // 2, 4, 8 or 16 G!
 
-    // sand.randomize(); // Initialize random sand positions
+    //sand.randomize(); // Initialize random sand positions
 
     // Set up initial sand coordinates, in 8x8 blocks
     /*int n = 0;

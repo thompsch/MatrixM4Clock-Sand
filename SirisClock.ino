@@ -22,7 +22,7 @@ void setup()
   Serial.begin(9600);
   pinMode(3, INPUT_PULLUP);
   pixel_dust_setup();
-  write_text_to_matrix("start");
+  write_text_to_matrix("SIRIS");
   time_setup();
 }
 
