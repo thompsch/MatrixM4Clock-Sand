@@ -3,7 +3,7 @@
 #include "wifi_time.h"
 
 double dimmer = 1;
-double dimmerArray[3]= {1,0.2,0};
+double dimmerArray[4]= {1,0.2,0.1,0};
 int dimmerIndex = 0;
 
 int BUTTON_UP = 2;
@@ -29,9 +29,7 @@ void setup()
 void loop()
 {
   pixel_dust_loop();
-
   String time = time_loop();
-
   write_text_to_matrix(time);
 
   // Debouncers
@@ -41,8 +39,8 @@ void loop()
       lastDownDebounceTime = millis();
       if (sensorDownValue != downButtonState) {
         sensorDownValue = downButtonState;
-        if (dimmerIndex == 2) dimmerIndex = 0;
-        else dimmerIndex++; //should loop through 3-value array]
+        if (dimmerIndex == 3) dimmerIndex = 0;
+        else dimmerIndex++; //should loop through 4-value array
         dimmer = dimmerArray[dimmerIndex];
       }
     }

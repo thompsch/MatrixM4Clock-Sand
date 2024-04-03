@@ -16,6 +16,7 @@ IPAddress timeServer(162, 159, 200, 123); // pool.ntp.org NTP server
 const int NTP_PACKET_SIZE = 48;           // NTP timestamp is in the first 48 bytes of the message
 byte packetBuffer[NTP_PACKET_SIZE];       // buffer to hold incoming and outgoing packets
 const int timeZone = -7;                  // Pacific Standard Time (USA)
+long int lastInternetCheck;
 
 // A UDP instance to let us send and receive packets over UDP
 WiFiUDP Udp;
@@ -31,55 +32,68 @@ bool time_setup()
 
 time_t getNtpTime()
 {
-
-  if (WiFi.status() == WL_NO_MODULE)
-  {
-    //  don't continue
-    while (true)
-      ;
-  }
-
-  while (status != WL_CONNECTED)
-  {
-    status = WiFi.begin(ssid, pass);
-
-    // wait 10 seconds for connection:
-    // delay(10000);
-  }
-
-  // Serial.println("Connected to WiFi");
-  printWifiStatus();
-
-  // Serial.println("\nStarting connection to server...");
-  Udp.begin(localPort);
-
-  sendNTPpacket(timeServer); // send an NTP packet to a time server
-  uint32_t beginWait = millis();
-  while (millis() - beginWait < 1500)
-  {
-    int size = Udp.parsePacket();
-    if (size >= NTP_PACKET_SIZE)
+    if (WiFi.status() == WL_NO_MODULE)
     {
-      // Serial.println("Receive NTP Response");
-      Udp.read(packetBuffer, NTP_PACKET_SIZE); // read packet into the buffer
-      unsigned long secsSince1900;
-      // convert four bytes starting at location 40 to a long integer
-      secsSince1900 = (unsigned long)packetBuffer[40] << 24;
-      secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
-      secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
-      secsSince1900 |= (unsigned long)packetBuffer[43];
-      return secsSince1900 - 2208988800UL + timeZone * 3600;
+      //  don't continue
+      while (true)
+        ;
     }
-  }
-  return 0;
-}
 
+    while (status != WL_CONNECTED)
+    {
+      
+      lastInternetCheck = millis();
+      status = WiFi.begin(ssid, pass);
+
+      //wait 10 seconds for connection:
+      delay(10000);
+    }
+
+    Serial.println("Connected to WiFi");
+    printWifiStatus();
+
+    // Serial.println("\nStarting connection to server...");
+    Udp.begin(localPort);
+
+    sendNTPpacket(timeServer); // send an NTP packet to a time server
+    uint32_t beginWait = millis();
+    while (millis() - beginWait < 1500)
+    {
+      int size = Udp.parsePacket();
+      if (size >= NTP_PACKET_SIZE)
+      {
+        Serial.println("Received NTP Response");
+        Udp.read(packetBuffer, NTP_PACKET_SIZE); // read packet into the buffer
+        unsigned long secsSince1900;
+        // convert four bytes starting at location 40 to a long integer
+        secsSince1900 = (unsigned long)packetBuffer[40] << 24;
+        secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
+        secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
+        secsSince1900 |= (unsigned long)packetBuffer[43];
+
+        long combined = secsSince1900 - 2208988800UL + timeZone * 3600;
+        Serial.println(combined);
+        return combined;
+      }
+    }
+    return 0;
+  //} else {
+  //  return 0;
+  //}
+}
 time_t prevDisplay = 0; // when the digital clock was displayed
 time_t prevMinute = 0;
 
 String time_loop()
 {
+  if (millis() >= lastInternetCheck + (30*60*1000)) {
+    Serial.println("it's been 30 minutes; let's NtpTime");
+    lastInternetCheck = millis();
+    setSyncProvider(getNtpTime);
+  }
   return digitalClockDisplay();
+  delay(5000);
+
 }
 
 String digitalClockDisplay()

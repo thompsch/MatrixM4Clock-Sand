@@ -22,21 +22,19 @@ Adafruit_Protomatter matrix(
     false);                    // No double-buffering here (see "doublebuffer" example)
 
 void screen_setup(){
-  Serial.println("screen_setup");
-  
   ProtomatterStatus status = matrix.begin();
   matrix.setFont();
-  matrix.drawRect(15, 10, 33, 11, matrix.color565(0, 60 * dimmer+0.1, 0)); //always show text, even if dimmer == 0
+  matrix.drawRect(15, 10, 33, 11, matrix.color565(0, 60 * dimmer+0.2, 0)); //always show text, even if dimmer == 0
   matrix.show();
 }
 
 
 void write_text_to_matrix(String message)
 {
-    matrix.drawRect(15, 10, 33, 11, matrix.color565(0, 60 * dimmer, 0)); //main box
+    matrix.drawRect(15, 10, 33, 11, matrix.color565(0, 60 * dimmer+0.2, 0)); //main box
     matrix.fillRect(16, 11, 31, 9, matrix.color565(0, 0, 0)); 
     matrix.setCursor(17, 12);
-    matrix.setTextColor(matrix.color565(0, 60 * dimmer, 0));
+    matrix.setTextColor(matrix.color565(0, 60 * dimmer+0.2, 0));
     matrix.print(message);
     matrix.show(); // Copy data to matrix buffers
     matrix.show();

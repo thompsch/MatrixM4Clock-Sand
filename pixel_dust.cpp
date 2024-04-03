@@ -33,7 +33,8 @@ Adafruit_PixelDust sand(WIDTH, HEIGHT, N_GRAINS, 1, 128, false);
 uint32_t prevTime = 0; // Used for frames-per-second throttle
 
 void setColors() {
-
+//Serial.print("dimmer value: ");
+//Serial.println(dimmer);
 //try this library sometime:
 //https://github.com/newdigate/rgb565_colors
     //colors[0] = matrix.color565(60 * dimmer, 60 * dimmer, 60 * dimmer);   // Dark Gray
@@ -108,6 +109,11 @@ void pixel_dust_setup(void)
 
 void pixel_dust_loop()
 {
+  if (dimmer == 0.1) {
+    matrix.fillScreen(0x0);
+    isStopped == true;
+    return;
+  }
     if (dimmer == 0 && !isStopped)
     {
     isStopped = true;
