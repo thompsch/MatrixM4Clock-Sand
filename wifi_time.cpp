@@ -25,7 +25,8 @@ bool time_setup()
 {
   // Open serial communications and wait for port to open:
   setSyncProvider(getNtpTime);
-  setSyncInterval(300);
+  //check time every 5 minutes
+  setSyncInterval(300); //value in seconds
 
   return true;
 }
@@ -72,28 +73,26 @@ time_t getNtpTime()
         secsSince1900 |= (unsigned long)packetBuffer[43];
 
         long combined = secsSince1900 - 2208988800UL + timeZone * 3600;
-        Serial.println(combined);
+        Serial.print(combined);
+        Serial.print(" = ");
+        Serial.println(digitalClockDisplay());
         return combined;
       }
     }
     return 0;
-  //} else {
-  //  return 0;
-  //}
 }
 time_t prevDisplay = 0; // when the digital clock was displayed
 time_t prevMinute = 0;
 
-String time_loop()
+void time_loop()
 {
-  if (millis() >= lastInternetCheck + (30*60*1000)) {
+  /*if (millis() >= lastInternetCheck + (60*1000)) {
     Serial.println("it's been 30 minutes; let's NtpTime");
     lastInternetCheck = millis();
-    setSyncProvider(getNtpTime);
+    //setSyncProvider(getNtpTime);
   }
-  return digitalClockDisplay();
-  delay(5000);
-
+  digitalClockDisplay();
+  delay(5000);*/
 }
 
 String digitalClockDisplay()
