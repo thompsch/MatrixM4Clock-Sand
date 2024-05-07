@@ -16,13 +16,28 @@ IPAddress timeServer(162, 159, 200, 123); // pool.ntp.org NTP server
 const int NTP_PACKET_SIZE = 48;           // NTP timestamp is in the first 48 bytes of the message
 byte packetBuffer[NTP_PACKET_SIZE];       // buffer to hold incoming and outgoing packets
 const int timeZone = -7;                  // Pacific Standard Time (USA)
-long int lastInternetCheck;
+//String latestTime;
 
 // A UDP instance to let us send and receive packets over UDP
 WiFiUDP Udp;
 
 bool time_setup()
 {
+      if (WiFi.status() == WL_NO_MODULE)
+    {
+      //  don't continue
+      while (true)
+        ;
+    }
+
+    while (status != WL_CONNECTED)
+    {
+      status = WiFi.begin(ssid, pass);
+
+      //wait 10 seconds for connection:
+      delay(10000);
+    }
+  Udp.begin(localPort);
   // Open serial communications and wait for port to open:
   setSyncProvider(getNtpTime);
   //check time every 5 minutes
@@ -33,23 +48,6 @@ bool time_setup()
 
 time_t getNtpTime()
 {
-    if (WiFi.status() == WL_NO_MODULE)
-    {
-      //  don't continue
-      while (true)
-        ;
-    }
-
-    while (status != WL_CONNECTED)
-    {
-      
-      lastInternetCheck = millis();
-      status = WiFi.begin(ssid, pass);
-
-      //wait 10 seconds for connection:
-      delay(10000);
-    }
-
     Serial.println("Connected to WiFi");
     printWifiStatus();
 
@@ -81,25 +79,42 @@ time_t getNtpTime()
     }
     return 0;
 }
+
 time_t prevDisplay = 0; // when the digital clock was displayed
-time_t prevMinute = 0;
 
 void time_loop()
 {
-  /*if (millis() >= lastInternetCheck + (60*1000)) {
-    Serial.println("it's been 30 minutes; let's NtpTime");
-    lastInternetCheck = millis();
-    //setSyncProvider(getNtpTime);
+  if (timeStatus() != timeNotSet) {
+    if (now() != prevDisplay) { //update the display only if time has changed
+      Serial.print("prevDisplay:" + prevDisplay);
+      //Serial.println(prevDisplay);
+      prevDisplay = now();
+      Serial.println(digitalClockDisplay());
+      //latestTime = digitalClockDisplay();
+    }
   }
-  digitalClockDisplay();
-  delay(5000);*/
+}
+
+String getLatestTime()
+{
+  //Serial.print("getlatestTime: ");
+  //Serial.println(latestTime);
+  return digitalClockDisplay();
 }
 
 String digitalClockDisplay()
 {
-  prevDisplay = now();
-  prevMinute = minute();
-
+  /*Serial.print(hour());
+  printDigits(minute());
+  printDigits(second());
+  Serial.print(" ");
+  Serial.print(day());
+  Serial.print(".");
+  Serial.print(month());
+  Serial.print(".");
+  Serial.print(year());
+  Serial.println();*/
+  
   int shortHour = hour();
   if (hour() > 12)
   {
