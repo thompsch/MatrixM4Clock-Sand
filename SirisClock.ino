@@ -17,6 +17,8 @@ unsigned long lastUpDebounceTime = 0;
 int lastUpButtonState = HIGH;
 int upButtonState = HIGH;
 
+String current_time = "";
+
 void setup()
 {
   Serial.begin(9600);
@@ -30,7 +32,12 @@ void loop()
 {
   pixel_dust_loop();
   String time = time_loop();
-  write_text_to_matrix(time);
+  if (time != current_time){
+    Serial.println("updating time: " + time);
+    current_time = time;
+     write_text_to_matrix(time);
+  }
+ 
 
   // Debouncers
   int sensorDownValue = digitalRead(BUTTON_DOWN);

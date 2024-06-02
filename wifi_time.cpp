@@ -92,8 +92,7 @@ String time_loop()
     setSyncProvider(getNtpTime);
   }
   return digitalClockDisplay();
-  delay(5000);
-
+  //delay(5000);
 }
 
 String digitalClockDisplay()
