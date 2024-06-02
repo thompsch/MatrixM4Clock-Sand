@@ -25,18 +25,18 @@ void setup()
   pinMode(3, INPUT_PULLUP);
   pixel_dust_setup();
   write_text_to_matrix("SIRIS");
-  time_setup();
+  //time_setup();
 }
 
 void loop()
 {
   pixel_dust_loop();
-  String time = time_loop();
+  /*String time = time_loop();
   if (time != current_time){
     Serial.println("updating time: " + time);
     current_time = time;
-     write_text_to_matrix(time);
-  }
+    write_text_to_matrix(time);
+  }*/
  
 
   // Debouncers
