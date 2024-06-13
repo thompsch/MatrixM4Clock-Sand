@@ -26,12 +26,14 @@ void setup()
   pixel_dust_setup();
   write_text_to_matrix("SIRIS");
   time_setup();
+  Serial.println(getLatestTime());
+  write_text_to_matrix(getLatestTime());
 }
 
 void loop()
 {
   pixel_dust_loop();
-
+  
   String time = time_loop();
   write_text_to_matrix(time);
 
@@ -71,6 +73,7 @@ void loop()
   }
  
 
+  write_text_to_matrix(getLatestTime());
   // Debouncers
   int sensorDownValue = digitalRead(BUTTON_DOWN);
   if (sensorDownValue != lastDownButtonState) {

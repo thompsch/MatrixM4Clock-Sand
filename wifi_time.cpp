@@ -16,23 +16,14 @@ IPAddress timeServer(162, 159, 200, 123); // pool.ntp.org NTP server
 const int NTP_PACKET_SIZE = 48;           // NTP timestamp is in the first 48 bytes of the message
 byte packetBuffer[NTP_PACKET_SIZE];       // buffer to hold incoming and outgoing packets
 const int timeZone = -7;                  // Pacific Standard Time (USA)
-long int lastInternetCheck;
+//String latestTime;
 
 // A UDP instance to let us send and receive packets over UDP
 WiFiUDP Udp;
 
 bool time_setup()
 {
-  // Open serial communications and wait for port to open:
-  setSyncProvider(getNtpTime);
-  setSyncInterval(300);
-
-  return true;
-}
-
-time_t getNtpTime()
-{
-    if (WiFi.status() == WL_NO_MODULE)
+      if (WiFi.status() == WL_NO_MODULE)
     {
       //  don't continue
       while (true)
@@ -41,14 +32,22 @@ time_t getNtpTime()
 
     while (status != WL_CONNECTED)
     {
-      
-      lastInternetCheck = millis();
       status = WiFi.begin(ssid, pass);
 
       //wait 10 seconds for connection:
       delay(10000);
     }
+  Udp.begin(localPort);
+  // Open serial communications and wait for port to open:
+  setSyncProvider(getNtpTime);
+  //check time every 5 minutes
+  setSyncInterval(300); //value in seconds
 
+  return true;
+}
+
+time_t getNtpTime()
+{
     Serial.println("Connected to WiFi");
     printWifiStatus();
 
@@ -78,14 +77,11 @@ time_t getNtpTime()
       }
     }
     return 0;
-  //} else {
-  //  return 0;
-  //}
 }
-time_t prevDisplay = 0; // when the digital clock was displayed
-time_t prevMinute = 0;
 
-String time_loop()
+time_t prevDisplay = 0; // when the digital clock was displayed
+
+void time_loop()
 {
   if (millis() >= lastInternetCheck + (5*60*1000)) {
     Serial.println("it's been 5 minutes; let's NtpTime");
@@ -98,9 +94,17 @@ String time_loop()
 
 String digitalClockDisplay()
 {
-  prevDisplay = now();
-  prevMinute = minute();
-
+  /*Serial.print(hour());
+  printDigits(minute());
+  printDigits(second());
+  Serial.print(" ");
+  Serial.print(day());
+  Serial.print(".");
+  Serial.print(month());
+  Serial.print(".");
+  Serial.print(year());
+  Serial.println();*/
+  
   int shortHour = hour();
   if (hour() > 12)
   {
