@@ -71,9 +71,8 @@ time_t getNtpTime()
         secsSince1900 |= (unsigned long)packetBuffer[43];
 
         long combined = secsSince1900 - 2208988800UL + timeZone * 3600;
-        Serial.print(combined);
-        Serial.print(" = ");
-        Serial.println(digitalClockDisplay());
+        Serial.println(combined);
+        setTime(combined);
         return combined;
       }
     }
@@ -84,22 +83,13 @@ time_t prevDisplay = 0; // when the digital clock was displayed
 
 void time_loop()
 {
-  if (timeStatus() != timeNotSet) {
-    if (now() != prevDisplay) { //update the display only if time has changed
-      Serial.print("prevDisplay:" + prevDisplay);
-      //Serial.println(prevDisplay);
-      prevDisplay = now();
-      Serial.println(digitalClockDisplay());
-      //latestTime = digitalClockDisplay();
-    }
+  if (millis() >= lastInternetCheck + (5*60*1000)) {
+    Serial.println("it's been 5 minutes; let's NtpTime");
+    lastInternetCheck = millis();
+    setSyncProvider(getNtpTime);
   }
-}
-
-String getLatestTime()
-{
-  //Serial.print("getlatestTime: ");
-  //Serial.println(latestTime);
-  return digitalClockDisplay();
+    return digitalClockDisplay();
+    delay(6000);
 }
 
 String digitalClockDisplay()
