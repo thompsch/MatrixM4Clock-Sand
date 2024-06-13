@@ -25,6 +25,38 @@ void setup()
   pinMode(3, INPUT_PULLUP);
   pixel_dust_setup();
   write_text_to_matrix("SIRIS");
+  time_setup();
+}
+
+void loop()
+{
+  pixel_dust_loop();
+
+  String time = time_loop();
+  write_text_to_matrix(time);
+
+
+  // Debouncers
+  int sensorDownValue = digitalRead(BUTTON_DOWN);
+  if (sensorDownValue != lastDownButtonState) {
+    if ((millis() - lastDownDebounceTime) > 300) {
+      lastDownDebounceTime = millis();
+      if (sensorDownValue != downButtonState) {
+        sensorDownValue = downButtonState;
+        if (dimmerIndex == 2) dimmerIndex = 0;
+        else dimmerIndex++; //should loop through 3-value array]
+        dimmer = dimmerArray[dimmerIndex];
+      }
+    }
+  }
+}
+/*
+void setup()
+{
+  Serial.begin(9600);
+  pinMode(3, INPUT_PULLUP);
+  pixel_dust_setup();
+  write_text_to_matrix("SIRIS");
   //time_setup();
 }
 
@@ -36,7 +68,7 @@ void loop()
     Serial.println("updating time: " + time);
     current_time = time;
     write_text_to_matrix(time);
-  }*/
+  }
  
 
   // Debouncers
@@ -52,4 +84,4 @@ void loop()
       }
     }
   }
-}
+}*/

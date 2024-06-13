@@ -73,6 +73,7 @@ time_t getNtpTime()
 
         long combined = secsSince1900 - 2208988800UL + timeZone * 3600;
         Serial.println(combined);
+        setTime(combined);
         return combined;
       }
     }
@@ -86,13 +87,13 @@ time_t prevMinute = 0;
 
 String time_loop()
 {
-  if (millis() >= lastInternetCheck + (30*60*1000)) {
-    Serial.println("it's been 30 minutes; let's NtpTime");
+  if (millis() >= lastInternetCheck + (5*60*1000)) {
+    Serial.println("it's been 5 minutes; let's NtpTime");
     lastInternetCheck = millis();
     setSyncProvider(getNtpTime);
   }
-  return digitalClockDisplay();
-  //delay(5000);
+    return digitalClockDisplay();
+    delay(6000);
 }
 
 String digitalClockDisplay()

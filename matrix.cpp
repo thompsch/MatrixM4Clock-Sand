@@ -30,12 +30,12 @@ void screen_setup(){
 
 
 void write_text_to_matrix(String message)
-{
+{   
+  Serial.println("Writing message: " + message);
     matrix.drawRect(15, 10, 33, 11, matrix.color565(0, 60 * dimmer+0.2, 0)); //main box
     matrix.fillRect(16, 11, 31, 9, matrix.color565(0, 0, 0)); 
     matrix.setCursor(17, 12);
     matrix.setTextColor(matrix.color565(0, 60 * dimmer+0.2, 0));
     matrix.print(message);
     matrix.show(); // Copy data to matrix buffers
-    matrix.show();
 }
